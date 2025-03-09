@@ -20,7 +20,6 @@ const Home = () => {
 
   if (user) {
     router.push("/dashboard");
-    return <p>Loading...</p>;
   }
 
   return (
