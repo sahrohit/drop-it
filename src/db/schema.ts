@@ -17,9 +17,14 @@ export type Post = {
   likes: number;
   hates: number;
 
+  anonymous?: boolean;
+
   author: {
     displayName?: string;
     email?: string;
     photoURL?: string;
   };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  osm: any;
 };

@@ -27,6 +27,9 @@ import { addLikes } from "@/db/mutation";
 import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Badge } from "@/components/ui/badge";
+import { UserProfileModal } from "@/components/partials/post/profile-modal";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase";
 
 const DashboardPage = () => {
   const [latitude, setLatitude] = useState<number>(0);
@@ -34,9 +37,14 @@ const DashboardPage = () => {
   const [selectedPost, setSelectedPost] = useState<string | undefined>();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const [value, loading, error] = useCollection(getPosts(latitude, longitude), {
-    snapshotListenOptions: { includeMetadataChanges: true },
-  });
+  const [user] = useAuthState(auth);
+
+  const [value, loading, error] = useCollection(
+    getPosts(user?.uid ?? "", latitude, longitude),
+    {
+      snapshotListenOptions: { includeMetadataChanges: true },
+    }
+  );
 
   const Map = useMemo(
     () =>
@@ -178,17 +186,26 @@ const DashboardPage = () => {
               <div className="p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage
-                        src={post.data()?.author?.photoURL}
-                        alt={post.data()?.author?.displayName}
-                      />
-                      <AvatarFallback>
-                        {post?.data()?.author?.displayName?.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
+                    {post.data()?.anonymous ? (
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={""} alt={"Anonymous"} />
+                        <AvatarFallback>{"AN"}</AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage
+                          src={post.data()?.author?.photoURL}
+                          alt={post.data()?.author?.displayName}
+                        />
+                        <AvatarFallback>
+                          {post?.data()?.author?.displayName?.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <p className="text-xs font-medium leading-none">
-                      {post?.data()?.author?.displayName}
+                      {post.data()?.anonymous
+                        ? "Anonymous"
+                        : post?.data()?.author?.displayName}
                     </p>
                   </div>
                   <Badge
@@ -270,7 +287,11 @@ const DashboardPage = () => {
             <Badge variant="outline" className="font-normal">
               {value?.size} posts found near you
             </Badge>
-            <CreatePostModal />
+
+            <div className="flex flex-row gap-3 items-center">
+              <UserProfileModal />
+              <CreatePostModal />
+            </div>
           </div>
 
           <div className="space-y-3">

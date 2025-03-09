@@ -22,9 +22,29 @@ export const addPost = async (
   > & {
     lat: number;
     long: number;
+    anonymous?: boolean;
+    uid: string;
   }
 ) => {
-  const docRef = await addDoc(collection(db, "posts"), data);
+  const coord = [data.lat, data.long];
+  const osm = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${coord[0]}&lon=${coord[1]}&format=json`,
+    {
+      headers: {
+        "User-Agent": "DropIt v0.1",
+      },
+    }
+  );
+
+  const osmResponse = await osm.json();
+
+  console.log("OSM Response", osmResponse);
+
+  const docRef = await addDoc(collection(db, "posts"), {
+    ...data,
+    osm: osmResponse,
+  });
+
   return docRef.id;
 };
 

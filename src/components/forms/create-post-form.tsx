@@ -23,14 +23,16 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { serverTimestamp } from "firebase/firestore";
 import { Globe, Lock } from "lucide-react";
-import { Input } from "../ui/input";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 
 const LOCATIONS = ["public", "private"] as const;
 
 const formSchema = z.object({
   title: z.string().nonempty(),
   content: z.string().nonempty(),
-  private: z.enum(LOCATIONS),
+  private: z.enum(LOCATIONS).optional(),
+  anonymous: z.coerce.boolean().optional(),
 });
 
 const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
@@ -41,6 +43,8 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     defaultValues: {
       title: "",
       content: "",
+      private: "public",
+      anonymous: false,
     },
   });
 
@@ -71,6 +75,8 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             hates: 0,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
+            anonymous: values.anonymous,
+            uid: user.uid ?? "0000000000000000",
           }),
           {
             loading: "Creating your post...",
@@ -162,7 +168,27 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           )}
         />
 
-        <Button type="submit">Submit</Button>
+        <FormField
+          control={form.control}
+          name="anonymous"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Anonymous Post</FormLabel>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" className="w-full mb-6">
+          Submit
+        </Button>
       </form>
     </Form>
   );
