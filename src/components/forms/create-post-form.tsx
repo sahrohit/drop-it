@@ -65,7 +65,7 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             content: values.content,
             lat: position.coords.latitude,
             long: position.coords.longitude,
-            private: "private",
+            private: values.private as "public" | "private",
             author: {
               email: user.email ?? undefined,
               displayName: user.displayName ?? undefined,
