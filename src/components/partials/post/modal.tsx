@@ -9,15 +9,16 @@ import {
   CredenzaTitle,
   CredenzaTrigger,
 } from "@/components/ui/credenza";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-export const CreatePostModal = () => {
+export const CreatePostModal = ({ className }: { className?: string }) => {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <Credenza open={modalOpen} onOpenChange={(val) => setModalOpen(val)}>
       <CredenzaTrigger asChild>
-        <Button>Post</Button>
+        <Button className={cn(className)}>Post</Button>
       </CredenzaTrigger>
       <CredenzaContent>
         <CredenzaHeader>

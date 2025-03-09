@@ -19,17 +19,20 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { RadioGroupItem } from "@radix-ui/react-radio-group";
 import { Label } from "@/components/ui/label";
 import { addPost } from "@/db/mutation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase";
+import { serverTimestamp } from "firebase/firestore";
 
 const LOCATIONS = ["public", "private"] as const;
 
 const formSchema = z.object({
   content: z.string().nonempty(),
   private: z.enum(LOCATIONS),
-  // category: z.string().nonempty(),
-  // tags: z.array(z.string().nonempty()),
 });
 
 const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
+  const [user] = useAuthState(auth);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,6 +43,11 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const toastId = toast.loading("Getting your geolocation...");
 
+    if (!user?.email) {
+      toast.error("You need to be logged in to create a post", { id: toastId });
+      return;
+    }
+
     // Getting the geolocation
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -49,15 +57,24 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             lat: position.coords.latitude,
             long: position.coords.longitude,
             private: "private",
+            author: {
+              email: user.email ?? undefined,
+              displayName: user.displayName ?? undefined,
+              photoURL: user.photoURL ?? undefined,
+            },
+            likes: 0,
+            hates: 0,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
           }),
           {
             loading: "Creating your post...",
             success: "Post created successfully",
             error: "Failed to create post",
+            id: toastId,
           }
         );
 
-        console.log(position, values);
         onSuccess?.();
       },
       (err) => {
