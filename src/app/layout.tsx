@@ -35,7 +35,7 @@ export default function RootLayout({
         vaul-drawer-wrapper=""
       >
         {children}
-        <Toaster />
+        <Toaster position="top-center" />
       </body>
     </html>
   );

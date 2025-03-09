@@ -22,10 +22,13 @@ import { addPost } from "@/db/mutation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { serverTimestamp } from "firebase/firestore";
+import { Globe, Lock } from "lucide-react";
+import { Input } from "../ui/input";
 
 const LOCATIONS = ["public", "private"] as const;
 
 const formSchema = z.object({
+  title: z.string().nonempty(),
   content: z.string().nonempty(),
   private: z.enum(LOCATIONS),
 });
@@ -36,6 +39,7 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title: "",
       content: "",
     },
   });
@@ -53,6 +57,7 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       (position) => {
         toast.promise(
           addPost({
+            title: values.title,
             content: values.content,
             lat: position.coords.latitude,
             long: position.coords.longitude,
@@ -88,13 +93,27 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="What's happening here?" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="content"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Tell us a little bit about yourself"
+                  placeholder="Title isn't enough? Blab here."
                   className="resize-none"
                   {...field}
                 />
@@ -108,10 +127,10 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           control={form.control}
           name="private"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="w-full">
               <FormLabel>Sharing Mode</FormLabel>
               <FormControl>
-                <fieldset className="space-y-4">
+                <fieldset className="space-y-4 w-full">
                   <RadioGroup
                     className="flex flex-wrap gap-2"
                     defaultValue="public"
@@ -120,7 +139,7 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                     {LOCATIONS.map((item) => (
                       <div
                         key={`${item}`}
-                        className="border-input has-data-[state=checked]:border-ring relative flex flex-col items-start gap-4 rounded-md border p-3 shadow-xs outline-none"
+                        className="border-input has-data-[state=checked]:border-ring has-data-[state=checked]:border-3 relative flex flex-col items-start gap-4 rounded-md border p-3 shadow-xs outline-none"
                       >
                         <div className="flex items-center gap-2">
                           <RadioGroupItem
@@ -128,7 +147,10 @@ const CreatePostForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                             value={item}
                             className="after:absolute after:inset-0"
                           />
-                          <Label htmlFor={item}>{item}</Label>
+                          {item === "public" ? <Globe /> : <Lock />}
+                          <Label className="uppercase" htmlFor={item}>
+                            {item}
+                          </Label>
                         </div>
                       </div>
                     ))}

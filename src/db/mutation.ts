@@ -11,6 +11,7 @@ import { Post } from "./schema";
 export const addPost = async (
   data: Pick<
     Post,
+    | "title"
     | "content"
     | "private"
     | "author"
